@@ -15,7 +15,7 @@ std::vector<Point> points = {
 
 int selected = -1;  // Выбранная точка
 float angleX = 0.0f, angleY = 0.0f;  // Углы поворота
-float zoom = -3.0f;  // Зум камеры
+float zoom = -2.0f;  // Зум камеры
 bool rotating = false;
 double lastX, lastY;
 
@@ -55,6 +55,8 @@ void display() {
     for (const auto& p : points) {
         drawTextPlaceholder(p.x, p.y, p.z);
     }
+
+    glFlush();  // ВАЖНО!
 }
 
 // Обработчик клика мыши
@@ -121,7 +123,12 @@ int main() {
     glfwSetScrollCallback(window, scrollCallback);
 
     while (!glfwWindowShouldClose(window)) {
-        display();
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluPerspective(45.0, 800.0 / 600.0, 0.1, 10.0); // Настройка перспективы
+		glMatrixMode(GL_MODELVIEW);
+
+		display();
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
