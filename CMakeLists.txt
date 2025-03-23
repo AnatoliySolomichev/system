@@ -9,7 +9,6 @@ cmake_policy(SET CMP0072 NEW)  # Предпочитаем GLVND
 set(OpenGL_GL_PREFERENCE "GLVND")  # Используем GLVND
 
 
-
 find_package(OpenGL REQUIRED)
 #find_package(GLUT REQUIRED)
 
@@ -22,11 +21,19 @@ find_package(glfw3 REQUIRED)
 #find_package(Freetype REQUIRED PATHS /usr/include/freetype2 NO_DEFAULT_PATH)
 #include_directories(${FREETYPE_INCLUDE_DIRS})
 #include_directories(/usr/include/freetype2)
-find_library(FREETYPE_LIBRARIES freetype REQUIRED)
+#find_library(FREETYPE_LIBRARIES freetype REQUIRED)
 #include_directories(/usr/include/freetype2)
-set(FREETYPE_INCLUDE_DIRS /usr/include/freetype2)
+#set(FREETYPE_INCLUDE_DIRS /usr/include/freetype2)
+#include_directories(${FREETYPE_INCLUDE_DIRS})
+#set(FREETYPE_LIBRARIES /usr/lib/x86_64-linux-gnu/libfreetype.so)
+
+#set(CMAKE_PREFIX_PATH "/home/user-1/my/packets/freetype/freetype-2.13.3/install;${CMAKE_PREFIX_PATH}")
+#find_package(Freetype REQUIRED)
+##include_directories(${FREETYPE_INCLUDE_DIRS})
+#include_directories(/home/user-1/my/packets/freetype/freetype-2.13.3/install/include/freetype2)
+
+find_package(Freetype REQUIRED)
 include_directories(${FREETYPE_INCLUDE_DIRS})
-set(FREETYPE_LIBRARIES /usr/lib/x86_64-linux-gnu/libfreetype.so)
 
 
 # This project will output an executable file
@@ -37,5 +44,4 @@ configure_file(config.h.in config.h)
 
 # Include the configuration header in the build
 target_include_directories(${PROJECT_NAME} PUBLIC "${PROJECT_BINARY_DIR}" ${FREETYPE_INCLUDE_DIRS})
-#include_directories(${FREETYPE_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} OpenGL::GL GLU glfw GLEW ${FREETYPE_LIBRARIES})

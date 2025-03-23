@@ -3,7 +3,8 @@
 #include <iostream>
 #include <vector>
 
-#include <ft2build.h>
+//#include <ft2build.h>
+#include "/home/user-1/my/packets/freetype/freetype-2.13.3/install/include/freetype2/ft2build.h"
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
 
