@@ -5,6 +5,18 @@ project (System_1
 	VERSION 0.1
 	DESCRIPTION "A Hello World Project")
 
+cmake_policy(SET CMP0072 NEW)  # Предпочитаем GLVND
+set(OpenGL_GL_PREFERENCE "GLVND")  # Используем GLVND
+
+
+
+find_package(OpenGL REQUIRED)
+find_package(GLUT REQUIRED)
+
+#set(GLFW_DIR "/usr/local/lib/cmake/glfw3/glfw3Config.cmake")  # Путь может отличаться в зависимости от системы
+#find_package(GLFW REQUIRED)
+find_package(glfw3 REQUIRED)
+
 # This project will output an executable file
 add_executable(${PROJECT_NAME} System_1.cpp)
 
@@ -13,3 +25,4 @@ configure_file(config.h.in config.h)
 
 # Include the configuration header in the build
 target_include_directories(${PROJECT_NAME} PUBLIC "${PROJECT_BINARY_DIR}")
+target_link_libraries(${PROJECT_NAME} OpenGL::GL GLU GLUT::GLUT glfw)
