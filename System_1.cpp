@@ -3,6 +3,10 @@
 #include <iostream>
 #include <vector>
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_OUTLINE_H
+
 // Координаты точек (имитация текста)
 struct Point {
     float x, y, z;
@@ -18,6 +22,37 @@ float angleX = 0.0f, angleY = 0.0f;  // Углы поворота
 float zoom = -2.0f;  // Зум камеры
 bool rotating = false;
 double lastX, lastY;
+
+FT_Face face;
+FT_Library ft;
+
+void drawOutlinedText(float x, float y, float z, const char* text) {
+    glPushMatrix();
+    glTranslatef(x, y, z);
+    
+    glColor3f(1.0, 1.0, 1.0);  // Белый цвет обводки
+    
+    while (*text) {
+//        if (FT_Load_Char(face, *text, FT_LOAD_NO_BITMAP | FT_LOAD_OUTLINE)) {
+	    if (FT_Load_Char(face, *text, FT_LOAD_NO_BITMAP)) {
+            text++;
+            continue;
+        }
+
+        FT_Outline* outline = &face->glyph->outline;
+        glBegin(GL_LINE_LOOP);
+        for (int i = 0; i < outline->n_points; i++) {
+            glVertex3f(outline->points[i].x / 64.0f / 100.0f, 
+                       outline->points[i].y / 64.0f / 100.0f, 0);
+        }
+        glEnd();
+
+        glTranslatef(face->glyph->advance.x / 64.0f / 100.0f, 0, 0);
+        text++;
+    }
+
+    glPopMatrix();
+}
 
 // Имитация "текста" — рисуем квадраты
 void drawTextPlaceholder(float x, float y, float z) {
@@ -52,11 +87,15 @@ void display() {
 
     // "Текст" (имитация точками)
     glColor3f(1.0, 0.0, 0.0);
-    for (const auto& p : points) {
-        drawTextPlaceholder(p.x, p.y, p.z);
-    }
+//    for (const auto& p : points) {
+//        drawTextPlaceholder(p.x, p.y, p.z);
+//    }
+	for (int i = 0; i < points.size(); i++) {
+		drawOutlinedText(points[i].x, points[i].y, points[i].z,
+						 ("P" + std::to_string(i)).c_str());
+	}
 
-    glFlush();  // ВАЖНО!
+	glFlush();  // ВАЖНО!
 }
 
 // Обработчик клика мыши
@@ -103,7 +142,20 @@ int main() {
         return -1;
     }
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "3D Points with Rotation & Zoom", NULL, NULL);
+	if (FT_Init_FreeType(&ft)) {
+		std::cerr << "Ошибка инициализации FreeType\n";
+		return -1;
+	}
+
+	if (FT_New_Face(ft, "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 0,
+					&face)) {
+		std::cerr << "Ошибка загрузки шрифта!\n";
+		return -1;
+	}
+
+	FT_Set_Pixel_Sizes(face, 0, 48); // Размер шрифта
+
+	GLFWwindow* window = glfwCreateWindow(800, 600, "3D Points with Rotation & Zoom", NULL, NULL);
     if (!window) {
         std::cerr << "Ошибка создания окна\n";
         glfwTerminate();
