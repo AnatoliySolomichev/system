@@ -11,7 +11,7 @@ set(OpenGL_GL_PREFERENCE "GLVND")  # Используем GLVND
 
 
 find_package(OpenGL REQUIRED)
-find_package(GLUT REQUIRED)
+#find_package(GLUT REQUIRED)
 
 #set(GLFW_DIR "/usr/local/lib/cmake/glfw3/glfw3Config.cmake")  # Путь может отличаться в зависимости от системы
 #find_package(GLFW REQUIRED)
@@ -25,4 +25,4 @@ configure_file(config.h.in config.h)
 
 # Include the configuration header in the build
 target_include_directories(${PROJECT_NAME} PUBLIC "${PROJECT_BINARY_DIR}")
-target_link_libraries(${PROJECT_NAME} OpenGL::GL GLU GLUT::GLUT glfw)
+target_link_libraries(${PROJECT_NAME} OpenGL::GL GLU glfw GLEW)

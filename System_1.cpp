@@ -1,17 +1,9 @@
-//#include <iostream>
-//#include "config.h"
-//
-//int main(int argc, char **argv) {
-//	std::cout << "Hello World" << std::endl;
-//	std::cout << "Version " << System_1_VERSION_MAJOR << "." << System_1_VERSION_MINOR << std::endl;
-//	return 0; 
-//}
-
-#include <GL/glut.h>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <iostream>
 #include <vector>
 
-// Координаты точек с текстами
+// Координаты точек (имитация текста)
 struct Point {
     float x, y, z;
 };
@@ -21,22 +13,33 @@ std::vector<Point> points = {
     {  0.0f, -0.5f,  0.0f }
 };
 
-int selected = -1; // Выбранная точка
+int selected = -1;  // Выбранная точка
+float angleX = 0.0f, angleY = 0.0f;  // Углы поворота
+float zoom = -3.0f;  // Зум камеры
+bool rotating = false;
+double lastX, lastY;
 
-void drawText(const char *text, float x, float y, float z) {
-    glRasterPos3f(x, y, z);
-    while (*text) {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *text++);
-    }
+// Имитация "текста" — рисуем квадраты
+void drawTextPlaceholder(float x, float y, float z) {
+    float size = 0.05f;  // Размер квадрата
+    glBegin(GL_QUADS);
+    glVertex3f(x - size, y - size, z);
+    glVertex3f(x + size, y - size, z);
+    glVertex3f(x + size, y + size, z);
+    glVertex3f(x - size, y + size, z);
+    glEnd();
 }
 
+// Рендеринг сцены
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
-    
-    glTranslatef(0, 0, -3); // Отдаляем камеру
 
-    // Рисуем линии между точками
+    glTranslatef(0.0f, 0.0f, zoom);
+    glRotatef(angleX, 1, 0, 0);
+    glRotatef(angleY, 0, 1, 0);
+
+    // Линии между точками
     glColor3f(1.0, 1.0, 1.0);
     glBegin(GL_LINES);
     for (int i = 0; i < points.size(); i++) {
@@ -47,65 +50,82 @@ void display() {
     }
     glEnd();
 
-    // Рисуем текст
+    // "Текст" (имитация точками)
     glColor3f(1.0, 0.0, 0.0);
-    drawText("Point 1", points[0].x, points[0].y, points[0].z);
-    drawText("Point 2", points[1].x, points[1].y, points[1].z);
-    drawText("Point 3", points[2].x, points[2].y, points[2].z);
-
-    glutSwapBuffers();
-}
-
-// Обработчик мыши
-void mouse(int button, int state, int x, int y) {
-    if (button == GLUT_LEFT_BUTTON) {
-        if (state == GLUT_DOWN) {
-            float xf = (x / 400.0f) - 1.0f;
-            float yf = 1.0f - (y / 300.0f);
-
-            for (int i = 0; i < points.size(); i++) {
-                if ((points[i].x - xf) * (points[i].x - xf) +
-                    (points[i].y - yf) * (points[i].y - yf) < 0.02f) {
-                    selected = i;
-                    break;
-                }
-            }
-        } else if (state == GLUT_UP) {
-            selected = -1;
-        }
+    for (const auto& p : points) {
+        drawTextPlaceholder(p.x, p.y, p.z);
     }
 }
 
-// Перемещение точки
-void motion(int x, int y) {
+// Обработчик клика мыши
+void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        selected = 0; // Пример: всегда выбираем 1 точку
+    } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+        selected = -1;
+    }
+
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+        rotating = true;
+        glfwGetCursorPos(window, &lastX, &lastY);
+    } else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
+        rotating = false;
+    }
+}
+
+// Обработчик движения мыши
+void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
     if (selected != -1) {
-        points[selected].x = (x / 400.0f) - 1.0f;
-        points[selected].y = 1.0f - (y / 300.0f);
-        glutPostRedisplay();
+        points[selected].x = (xpos / 400.0f) - 1.0f;
+        points[selected].y = 1.0f - (ypos / 300.0f);
+    }
+
+    if (rotating) {
+        double dx = xpos - lastX;
+        double dy = ypos - lastY;
+        angleY += dx * 0.5f;
+        angleX -= dy * 0.5f;
+        lastX = xpos;
+        lastY = ypos;
     }
 }
 
-void reshape(int w, int h) {
-    glViewport(0, 0, w, h);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(45, (float)w / h, 1, 10);
-    glMatrixMode(GL_MODELVIEW);
+// Обработчик зума колесиком мыши
+void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+    zoom += yoffset * 0.1f;
 }
 
-int main(int argc, char** argv) {
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    glutInitWindowSize(800, 600);
-    glutCreateWindow("3D Text with OpenGL");
+int main() {
+    if (!glfwInit()) {
+        std::cerr << "Ошибка инициализации GLFW\n";
+        return -1;
+    }
+
+    GLFWwindow* window = glfwCreateWindow(800, 600, "3D Points with Rotation & Zoom", NULL, NULL);
+    if (!window) {
+        std::cerr << "Ошибка создания окна\n";
+        glfwTerminate();
+        return -1;
+    }
+
+    glfwMakeContextCurrent(window);
+    glewExperimental = true;
+    if (glewInit() != GLEW_OK) {
+        std::cerr << "Ошибка инициализации GLEW\n";
+        return -1;
+    }
 
     glEnable(GL_DEPTH_TEST);
+    glfwSetMouseButtonCallback(window, mouseButtonCallback);
+    glfwSetCursorPosCallback(window, cursorPosCallback);
+    glfwSetScrollCallback(window, scrollCallback);
 
-    glutDisplayFunc(display);
-    glutReshapeFunc(reshape);
-    glutMouseFunc(mouse);
-    glutMotionFunc(motion);
+    while (!glfwWindowShouldClose(window)) {
+        display();
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
 
-    glutMainLoop();
+    glfwTerminate();
     return 0;
 }
