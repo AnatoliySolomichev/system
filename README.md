@@ -1,4 +1,4 @@
-#The English version of the description is below.
+# The English version of the description is below.
 
 # Вводное видео:
 https://www.youtube.com/watch?v=LORvI01v5is
@@ -12,7 +12,7 @@ https://t.me/unite_on_blockchain
 ссылка на виртуальный ПК:
 https://drive.google.com/drive/folders/1IOUuN7PVdYZrL5Sw9vmiDhaDOA9cqbpc?usp=sharing
 
-#English description:
+# English description:
 
 Introduction video:
 https://www.youtube.com/watch?v=LORvI01v5is
