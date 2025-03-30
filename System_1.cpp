@@ -3,8 +3,7 @@
 #include <iostream>
 #include <vector>
 
-//#include <ft2build.h>
-#include "/home/user-1/my/packets/freetype/freetype-2.13.3/install/include/freetype2/ft2build.h"
+#include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
 
@@ -28,6 +27,7 @@ FT_Face face;
 FT_Library ft;
 
 void drawOutlinedText(float x, float y, float z, const char* text) {
+	std::cout << "drawOutlinedText();\n";
     glPushMatrix();
     glTranslatef(x, y, z);
     
@@ -57,6 +57,7 @@ void drawOutlinedText(float x, float y, float z, const char* text) {
 
 // Имитация "текста" — рисуем квадраты
 void drawTextPlaceholder(float x, float y, float z) {
+	std::cout << "drawTextPlaceholder();\n";
     float size = 0.05f;  // Размер квадрата
     glBegin(GL_QUADS);
     glVertex3f(x - size, y - size, z);
@@ -68,6 +69,7 @@ void drawTextPlaceholder(float x, float y, float z) {
 
 // Рендеринг сцены
 void display() {
+	std::cout << "display();\n";
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
 
@@ -101,6 +103,7 @@ void display() {
 
 // Обработчик клика мыши
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+	std::cout << "mouseButtonCallback();\n";
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         selected = 0; // Пример: всегда выбираем 1 точку
     } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
@@ -117,6 +120,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 
 // Обработчик движения мыши
 void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
+	std::cout << "cursorPosCallback();\n";
     if (selected != -1) {
         points[selected].x = (xpos / 400.0f) - 1.0f;
         points[selected].y = 1.0f - (ypos / 300.0f);
@@ -134,10 +138,12 @@ void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 
 // Обработчик зума колесиком мыши
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+	std::cout << "scrollCallback();\n";
     zoom += yoffset * 0.1f;
 }
 
 int main() {
+	std::cout << "main();\n";
     if (!glfwInit()) {
         std::cerr << "Ошибка инициализации GLFW\n";
         return -1;
@@ -183,7 +189,7 @@ int main() {
 
 		display();
         glfwSwapBuffers(window);
-        glfwPollEvents();
+        glfwWaitEvents();
     }
 
     glfwTerminate();
