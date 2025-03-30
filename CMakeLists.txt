@@ -35,7 +35,6 @@ find_package(glfw3 REQUIRED)
 find_package(Freetype REQUIRED)
 include_directories(${FREETYPE_INCLUDE_DIRS})
 
-
 # This project will output an executable file
 add_executable(${PROJECT_NAME} System_1.cpp)
 
