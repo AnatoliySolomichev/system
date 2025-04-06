@@ -1,19 +1,19 @@
-#Docker
+# Docker
 
-#get file:
+# get file:
 https://github.com/AnatoliySolomichev/system/blob/main/Dockerfile
 
-#save Dockerfile in 
+# save Dockerfile in 
 ~/my/projects/dockers/opengl-dev-env_1/Dockerfile
 
-#install Docker:
+# install Docker:
 sudo apt install docker.io
 sudo systemctl enable --now docker
 sudo usermod -aG docker $USER
 
 cd ~/my/projects/dockers/opengl-dev-env_1/Dockerfile
 
-#allow local docker containers to access the X server
+# allow local docker containers to access the X server
 xhost +local:docker
 
 # build a Docker image named 'opengl-dev-env' from the current directory
@@ -29,13 +29,13 @@ docker run -it \
   --name opengl-dev \
   opengl-dev-env
 
-#Run Eclipse
+# Run Eclipse
 docker exec -it --user dev opengl-dev eclipse
 
-#Run MC
+# Run MC
 docker exec -it --user dev opengl-dev mc
 
-#start VM after "run"
+# start VM after "run"
 docker start -ai opengl-dev
 
 Introduction video:
