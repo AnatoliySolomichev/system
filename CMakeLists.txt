@@ -39,7 +39,7 @@ include_directories(${FREETYPE_INCLUDE_DIRS})
 add_executable(${PROJECT_NAME} System_1.cpp)
 
 # Create a simple configuration header
-configure_file(config.h.in config.h)
+#configure_file(config.h.in config.h)
 
 # Include the configuration header in the build
 target_include_directories(${PROJECT_NAME} PUBLIC "${PROJECT_BINARY_DIR}" ${FREETYPE_INCLUDE_DIRS})
