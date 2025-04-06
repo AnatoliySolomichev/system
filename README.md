@@ -8,7 +8,9 @@ https://github.com/AnatoliySolomichev/system/blob/main/Dockerfile
 
 # install Docker:
 sudo apt install docker.io
+
 sudo systemctl enable --now docker
+
 sudo usermod -aG docker $USER
 
 cd ~/my/projects/dockers/opengl-dev-env_1/Dockerfile
@@ -38,16 +40,16 @@ docker exec -it --user dev opengl-dev mc
 # start VM after "run"
 docker start -ai opengl-dev
 
-Introduction video:
+# Introduction video:
 https://www.youtube.com/watch?v=LORvI01v5is
 
-Email:
+# Email:
 system.unite.v1@gmail.com
 
-A telegram channel for uniting people on the blockchain:
+# A telegram channel for uniting people on the blockchain:
 https://t.me/unite_on_blockchain
 
-Virtual PC link:
+# Virtual PC link:
 https://drive.google.com/drive/folders/1IOUuN7PVdYZrL5Sw9vmiDhaDOA9cqbpc?usp=sharing
 user: user_1
 password: eic!$ufop3e5
