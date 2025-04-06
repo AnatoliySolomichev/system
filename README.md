@@ -1,20 +1,42 @@
-# The English version of the description is below.
+#Docker
 
-Вводное видео:
-https://www.youtube.com/watch?v=LORvI01v5is
+#get file:
+https://github.com/AnatoliySolomichev/system/blob/main/Dockerfile
 
-Email:
-system.unite.v1@gmail.com
+#save Dockerfile in 
+~/my/projects/dockers/opengl-dev-env_1/Dockerfile
 
-Телеграмм канал для объединения людей:
-https://t.me/unite_on_blockchain
+#install Docker:
+sudo apt install docker.io
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER
 
-ссылка на виртуальный ПК:
-https://drive.google.com/drive/folders/1IOUuN7PVdYZrL5Sw9vmiDhaDOA9cqbpc?usp=sharing
-пользователь: user_1
-пароль: eic!$ufop3e5
+cd ~/my/projects/dockers/opengl-dev-env_1/Dockerfile
 
-# English description:
+#allow local docker containers to access the X server
+xhost +local:docker
+
+# build a Docker image named 'opengl-dev-env' from the current directory
+docker build -t opengl-dev-env .
+
+# run a container with GUI and OpenGL support using the 'opengl-dev-env' image
+docker run -it \
+  --env DISPLAY=$DISPLAY \
+  --env XAUTHORITY=$XAUTHORITY \
+  --volume="$HOME/.Xauthority:$XAUTHORITY" \
+  --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+  --device=/dev/dri \
+  --name opengl-dev \
+  opengl-dev-env
+
+#Run Eclipse
+docker exec -it --user dev opengl-dev eclipse
+
+#Run MC
+docker exec -it --user dev opengl-dev mc
+
+#start VM after "run"
+docker start -ai opengl-dev
 
 Introduction video:
 https://www.youtube.com/watch?v=LORvI01v5is
