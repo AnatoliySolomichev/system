@@ -1,0 +1,9 @@
+{
+	"nodes":[
+		{"id":"c2dc5efccb164a75","x":-240,"y":-119,"width":400,"height":400,"type":"file","file":"Начало.md"},
+		{"id":"deb2487955eced60","x":560,"y":-119,"width":400,"height":400,"type":"file","file":"Открытый Децентрализованный Блокчейн.md"}
+	],
+	"edges":[
+		{"id":"6031276f9d9bfa8a","fromNode":"c2dc5efccb164a75","fromSide":"right","toNode":"deb2487955eced60","toSide":"left"}
+	]
+}
