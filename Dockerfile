@@ -27,6 +27,8 @@ RUN apt-get update && apt-get install -y \
     libasound2 \
     libatk-bridge2.0-0 \
     libgtk-3-0 \
+    gdb \
+    libssl-dev \
     && apt-get clean
 
 # For system project
@@ -57,15 +59,18 @@ RUN wget https://ftp.fau.de/eclipse/technology/epp/downloads/release/2025-03/R/e
 
 ####################################################################
 
-# Добавим репозиторий Microsoft для установки VSCode
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /usr/share/keyrings/microsoft-archive-keyring.gpg \
-    && echo "deb [signed-by=/usr/share/keyrings/microsoft-archive-keyring.gpg] https://packages.microsoft.com/repos/vscode stable main" | tee /etc/apt/sources.list.d/vscode.list \
-    && apt-get update
+# Установка VSCode
+RUN apt-get update && apt-get install -y wget gpg
+RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg \
+    && install -o root -g root -m 644 microsoft.gpg /usr/share/keyrings/ \
+    && sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list' \
+    && apt-get update \
+    && apt-get install -y code
 
-####################################################################
-
-# Установим Visual Studio Code
-RUN apt-get install -y code
+# Расширения VSCode
+RUN code --install-extension ms-vscode.cpptools --force && \
+    code --install-extension ms-vscode.cmake-tools && \
+    code --install-extension eamodio.gitlens --force
 
 #################################################################
 
