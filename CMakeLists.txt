@@ -35,6 +35,8 @@ find_package(glfw3 REQUIRED)
 find_package(Freetype REQUIRED)
 include_directories(${FREETYPE_INCLUDE_DIRS})
 
+find_package(OpenSSL REQUIRED)
+
 # This project will output an executable file
 add_executable(${PROJECT_NAME} System_1.cpp)
 
@@ -43,4 +45,4 @@ add_executable(${PROJECT_NAME} System_1.cpp)
 
 # Include the configuration header in the build
 target_include_directories(${PROJECT_NAME} PUBLIC "${PROJECT_BINARY_DIR}" ${FREETYPE_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} OpenGL::GL GLU glfw GLEW ${FREETYPE_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} OpenGL::GL GLU glfw GLEW ${FREETYPE_LIBRARIES} OpenSSL::SSL OpenSSL::Crypto)

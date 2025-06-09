@@ -7,6 +7,13 @@
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
 
+#include <openssl/ssl.h>
+#include <openssl/evp.h>
+#include <openssl/rsa.h>
+#include <openssl/pem.h>
+#include <openssl/err.h>
+#include <cstring>
+
 // Координаты точек (имитация текста)
 struct Point {
     float x, y, z;
@@ -25,6 +32,75 @@ double lastX, lastY;
 
 FT_Face face;
 FT_Library ft;
+
+void handleErrors() {
+    ERR_print_errors_fp(stderr);
+    abort();
+}
+
+int test_openssl() {
+    OpenSSL_add_all_algorithms();
+    ERR_load_crypto_strings();
+
+    // 1. Генерация ключей RSA
+    EVP_PKEY* keypair = EVP_PKEY_new();
+    RSA* rsa = RSA_generate_key(2048, RSA_F4, nullptr, nullptr);
+    if (!rsa) handleErrors();
+    EVP_PKEY_assign_RSA(keypair, rsa);
+
+    // 2. Сообщение для подписи
+    const std::string message = "Hello, OpenSSL!";
+    const unsigned char* data = reinterpret_cast<const unsigned char*>(message.c_str());
+    size_t data_len = message.size();
+
+    // 3. Подпись
+    EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
+    if (!mdctx) handleErrors();
+
+    if (1 != EVP_DigestSignInit(mdctx, nullptr, EVP_sha256(), nullptr, keypair))
+        handleErrors();
+
+    if (1 != EVP_DigestSignUpdate(mdctx, data, data_len))
+        handleErrors();
+
+    size_t sig_len = 0;
+    EVP_DigestSignFinal(mdctx, nullptr, &sig_len);  // Получить размер подписи
+
+    std::vector<unsigned char> signature(sig_len);
+    if (1 != EVP_DigestSignFinal(mdctx, signature.data(), &sig_len))
+        handleErrors();
+
+    signature.resize(sig_len);
+    EVP_MD_CTX_free(mdctx);
+
+    std::cout << "✔ Подпись создана (" << sig_len << " байт)\n";
+
+    // 4. Проверка подписи
+    EVP_MD_CTX* verify_ctx = EVP_MD_CTX_new();
+    if (!verify_ctx) handleErrors();
+
+    if (1 != EVP_DigestVerifyInit(verify_ctx, nullptr, EVP_sha256(), nullptr, keypair))
+        handleErrors();
+
+    if (1 != EVP_DigestVerifyUpdate(verify_ctx, data, data_len))
+        handleErrors();
+
+    int result = EVP_DigestVerifyFinal(verify_ctx, signature.data(), sig_len);
+
+    if (result == 1)
+        std::cout << "✅ Подпись подтверждена\n";
+    else if (result == 0)
+        std::cout << "❌ Подпись недействительна\n";
+    else
+        handleErrors();
+
+    EVP_MD_CTX_free(verify_ctx);
+    EVP_PKEY_free(keypair);
+    EVP_cleanup();
+    ERR_free_strings();
+
+    return 0;
+}
 
 void drawOutlinedText(float x, float y, float z, const char* text) {
 	std::cout << "drawOutlinedText();\n";
@@ -143,6 +219,9 @@ void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
 }
 
 int main() {
+
+    test_openssl();
+    
 	std::cout << "main();\n";
     if (!glfwInit()) {
         std::cerr << "Ошибка инициализации GLFW\n";
