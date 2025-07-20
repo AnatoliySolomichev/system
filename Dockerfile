@@ -67,11 +67,6 @@ RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor 
     && apt-get update \
     && apt-get install -y code
 
-# Расширения VSCode
-RUN code --install-extension ms-vscode.cpptools --force && \
-    code --install-extension ms-vscode.cmake-tools && \
-    code --install-extension eamodio.gitlens --force
-
 #################################################################
 
 # директорию my
@@ -84,6 +79,11 @@ RUN mkdir -p \
 
 # Устанавливаем пользователя по умолчанию
 USER dev
+
+# Расширения VSCode
+RUN code --install-extension ms-vscode.cpptools --force && \
+    code --install-extension ms-vscode.cmake-tools && \
+    code --install-extension eamodio.gitlens --force
 
 #################################################################
 
