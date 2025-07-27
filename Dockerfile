@@ -49,14 +49,6 @@ RUN useradd -ms /bin/bash dev \
 # Устанавливаем рабочую директорию
 WORKDIR /home/dev
 
-#################################################################
-
-# Установим Eclipse
-RUN wget https://ftp.fau.de/eclipse/technology/epp/downloads/release/2025-03/R/eclipse-cpp-2025-03-R-linux-gtk-x86_64.tar.gz && \
-    tar -xzf eclipse-cpp-*.tar.gz -C /opt && \
-    ln -s /opt/eclipse/eclipse /usr/local/bin/eclipse && \
-    rm eclipse-cpp-*.tar.gz
-
 ####################################################################
 
 # Установка VSCode
@@ -69,10 +61,9 @@ RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor 
 
 #################################################################
 
-# директорию my
+# создаем директорию /project/system
 RUN mkdir -p \
-    /home/dev/my/projects/system \
-    /home/dev/my/projects/eclipse-workspace \
+    /home/dev/project/system \
     && chown -R dev:dev /home/dev
 
 #################################################################
@@ -88,7 +79,7 @@ RUN code --install-extension ms-vscode.cpptools --force && \
 #################################################################
 
 # Склонируем репозиторий
-RUN git clone https://github.com/AnatoliySolomichev/system.git /home/dev/my/projects/system
+RUN git clone https://github.com/AnatoliySolomichev/system.git /home/dev/project/system
 
 #################################################################
 
