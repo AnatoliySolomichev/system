@@ -12,7 +12,9 @@
       "args": [],                                      // сюда можно передать аргументы
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",                     // рабочая директория
-      "environment": [],
+      "environment": [
+        //{"name": "DISPLAY", "value": "${env:DISPLAY}"}
+      ],
       "externalConsole": true,                         // если нужно отдельное окно
       "MIMode": "gdb",
       "setupCommands": [

@@ -1,0 +1,27 @@
+{
+  "name": "My Dev Container",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": ".."
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools",
+        "eamodio.gitlens",
+        "ms-vscode-remote.remote-containers", // якобы для удобной работы с Dev Containers.
+        "ms-azuretools.vscode-containers"
+      ]
+    }
+  },
+  // Настройки для доступа к X11
+  "runArgs": [
+    "--env=DISPLAY=${env:DISPLAY}", // Передача переменной DISPLAY
+    "--volume=/tmp/.X11-unix:/tmp/.X11-unix:rw", // Монтирование сокета X11
+    "--network=host" // Для упрощения сетевого доступа
+  ],
+  "forwardPorts": [3000, 8080], // Порты, которые использует ваше приложение
+  "postCreateCommand": "", // Команда после создания контейнера (если нужно)
+  "remoteUser": "dev" // Пользователь в контейнере (или другой, если настроен)
+}

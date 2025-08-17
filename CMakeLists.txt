@@ -8,6 +8,8 @@ project (System_1
 cmake_policy(SET CMP0072 NEW)  # Предпочитаем GLVND
 set(OpenGL_GL_PREFERENCE "GLVND")  # Используем GLVND
 
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+
 
 find_package(OpenGL REQUIRED)
 #find_package(GLUT REQUIRED)
