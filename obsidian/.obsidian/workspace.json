@@ -56,12 +56,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Задачи за донаты.md",
+                "file": "Идеология.md",
                 "mode": "source",
-                "source": false
+                "source": true
               },
               "icon": "lucide-file",
-              "title": "Задачи за донаты"
+              "title": "Идеология"
             }
           },
           {
@@ -224,13 +224,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Задачи за донаты.md",
+                "file": "Идеология.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Задачи за донаты"
+              "title": "Outline of Идеология"
             }
           }
         ],
@@ -242,6 +242,7 @@
   },
   "left-ribbon": {
     "hiddenItems": {
+      "bases:Create new base": false,
       "switcher:Open quick switcher": false,
       "graph:Open graph view": false,
       "canvas:Create new canvas": false,
@@ -252,8 +253,11 @@
   },
   "active": "47f96d476773c9ca",
   "lastOpenFiles": [
-    "Интеграция i2pd.md",
+    "Синергия.md",
+    "Идеология.md",
+    "Идеи.md",
     "Задачи за донаты.md",
+    "Интеграция i2pd.md",
     "Анкета.md",
     "Голосование.md",
     "Блокчейн.md",
@@ -262,16 +266,13 @@
     "Планы.md",
     "Расположение элементов схемы.canvas",
     "Цели.md",
-    "Идеология.md",
     "Обмен продукции на усредненные трудо-часы.md",
     "Начало.md",
-    "Идеи.md",
     "Контакты.md",
     "трудо-часы.md",
     "Терминология.md",
     "Средний трудо-час.md",
     "СМИ (средства массовой информации).md",
-    "Синергия.md",
     "Репозитории с альтернативным мнением.md",
     "Результаты правления капитализма.md",
     "Разработка.md",
