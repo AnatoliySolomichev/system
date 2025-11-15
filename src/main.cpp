@@ -16,6 +16,14 @@
 #include <cstring>
 
 #include "blocks.h"
+#include "crypto_utils.h"
+#include "blockchain.h"
+#include <ctime>
+#include <string>
+#include <sstream>
+#include <iomanip>
+#include <fstream>
+#include <memory>
 
 // Координаты точек (имитация текста)
 struct Point {
@@ -42,297 +50,75 @@ void handleErrors() {
     abort();
 }
 
-int test_openssl() {
-    OpenSSL_add_all_algorithms();
-    ERR_load_crypto_strings();
-
-    // 1. Генерация ключей RSA
-    EVP_PKEY *keypair = nullptr;
-    EVP_PKEY_CTX *ctx = nullptr;
-
-    // Create a new EVP_PKEY context for RSA key generation
-    ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nullptr);
-    if (!ctx) {
-        // Handle error
+int ensure_keys() {
+    const std::string priv = "private_key.pem";
+    const std::string pub = "public_key.pem";
+    if (crypto::keys_exist(priv, pub)) {
+        std::cout << "Keys already exist\n";
+        return 0;
+    }
+    if (!crypto::generate_rsa_keys(priv, pub, 2048)) {
+        std::cerr << "Failed to generate keys\n";
         return -1;
     }
-
-    // Initialize the context for key generation
-    if (EVP_PKEY_keygen_init(ctx) <= 0) {
-        EVP_PKEY_CTX_free(ctx);
-        return -1;
-    }
-
-    // Set RSA key generation parameters using OSSL_PARAM
-    unsigned int key_size = 2048;  // Key size
-    unsigned int pub_exp = 65537;  // Public exponent (RSA_F4)
-    OSSL_PARAM params[3];
-    params[0] = OSSL_PARAM_construct_uint("bits", &key_size); // Key size
-    params[1] = OSSL_PARAM_construct_uint("e", &pub_exp);   // Public exponent (RSA_F4)
-    params[2] = OSSL_PARAM_construct_end();
-
-    if (EVP_PKEY_CTX_set_params(ctx, params) <= 0) {
-        EVP_PKEY_CTX_free(ctx);
-        return -1;
-    }
-
-    // Generate the key
-    if (EVP_PKEY_keygen(ctx, &keypair) <= 0) {
-        EVP_PKEY_CTX_free(ctx);
-        return -1;
-    }
-
-    // Clean up
-    EVP_PKEY_CTX_free(ctx);
-
-    // сохранение ключей в PEM формате
-    // Сохранение приватного ключа в файл
-    FILE *priv_file = fopen("private_key.pem", "wb");
-    if (!priv_file)
-    {
-        fprintf(stderr, "Ошибка открытия файла для приватного ключа\n");
-        EVP_PKEY_free(keypair);
-        EVP_PKEY_CTX_free(ctx);
-        return -1;
-    }
-
-    // Записываем приватный ключ в формате PEM
-    if (PEM_write_PrivateKey(priv_file, keypair, nullptr, nullptr, 0, nullptr, nullptr) != 1)
-    {
-        fprintf(stderr, "Ошибка записи приватного ключа: %s\n", ERR_error_string(ERR_get_error(), nullptr));
-        fclose(priv_file);
-        EVP_PKEY_free(keypair);
-        EVP_PKEY_CTX_free(ctx);
-        return -1;
-    }
-    fclose(priv_file);
-
-    // Сохранение публичного ключа в файл
-    FILE *pub_file = fopen("public_key.pem", "wb");
-    if (!pub_file)
-    {
-        fprintf(stderr, "Ошибка открытия файла для публичного ключа\n");
-        EVP_PKEY_free(keypair);
-        EVP_PKEY_CTX_free(ctx);
-        return -1;
-    }
-
-    // Записываем публичный ключ в формате PEM
-    if (PEM_write_PUBKEY(pub_file, keypair) != 1)
-    {
-        fprintf(stderr, "Ошибка записи публичного ключа: %s\n", ERR_error_string(ERR_get_error(), nullptr));
-        fclose(pub_file);
-        EVP_PKEY_free(keypair);
-        EVP_PKEY_CTX_free(ctx);
-        return -1;
-    }
-    fclose(pub_file);
-
-    //// Освобождаем ресурсы
-    // EVP_PKEY_free(keypair);
-
-    // 2. Сообщение для подписи
-    const std::string message = "Hello, OpenSSL!";
-    const unsigned char* data = reinterpret_cast<const unsigned char*>(message.c_str());
-    size_t data_len = message.size();
-
-    // 3. Подпись
-    EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
-    if (!mdctx) handleErrors();
-
-    if (1 != EVP_DigestSignInit(mdctx, nullptr, EVP_sha256(), nullptr, keypair))
-        handleErrors();
-
-    if (1 != EVP_DigestSignUpdate(mdctx, data, data_len))
-        handleErrors();
-
-    size_t sig_len = 0;
-    EVP_DigestSignFinal(mdctx, nullptr, &sig_len);  // Получить размер подписи
-
-    std::vector<unsigned char> signature(sig_len);
-    if (1 != EVP_DigestSignFinal(mdctx, signature.data(), &sig_len))
-        handleErrors();
-
-    signature.resize(sig_len);
-    EVP_MD_CTX_free(mdctx);
-
-    std::cout << "✔ Подпись создана (" << sig_len << " байт)\n";
-
-    // 4. Проверка подписи
-    EVP_MD_CTX* verify_ctx = EVP_MD_CTX_new();
-    if (!verify_ctx) handleErrors();
-
-    if (1 != EVP_DigestVerifyInit(verify_ctx, nullptr, EVP_sha256(), nullptr, keypair))
-        handleErrors();
-
-    if (1 != EVP_DigestVerifyUpdate(verify_ctx, data, data_len))
-        handleErrors();
-
-    int result = EVP_DigestVerifyFinal(verify_ctx, signature.data(), sig_len);
-
-    if (result == 1)
-        std::cout << "✅ Подпись подтверждена\n";
-    else if (result == 0)
-        std::cout << "❌ Подпись недействительна\n";
-    else
-        handleErrors();
-
-    EVP_MD_CTX_free(verify_ctx);
-    EVP_PKEY_free(keypair);
-    EVP_cleanup();
-    ERR_free_strings();
-
+    std::cout << "Generated keys: " << priv << ", " << pub << "\n";
     return 0;
 }
 
-int test_sign_unsign_block() {
-    OpenSSL_add_all_algorithms();
-    ERR_load_crypto_strings();
-
-    // 1. Генерация ключей RSA
-    EVP_PKEY *keypair = nullptr;
-    EVP_PKEY_CTX *ctx = nullptr;
-
-    // Create a new EVP_PKEY context for RSA key generation
-    ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nullptr);
-    if (!ctx) {
-        // Handle error
+int demo_blockchain(const std::string &chainfile = "chain.dat") {
+    // create a small chain and write it to disk, then load and verify
+    const std::string priv = "private_key.pem";
+    const std::string pub = "public_key.pem";
+    if (!crypto::keys_exist(priv, pub)) {
+        std::cerr << "Keys missing, generate them first\n";
         return -1;
     }
+    EVP_PKEY *privk = crypto::load_private_key(priv);
+    if (!privk) { std::cerr << "failed to load private key\n"; return -1; }
 
-    // Initialize the context for key generation
-    if (EVP_PKEY_keygen_init(ctx) <= 0) {
-        EVP_PKEY_CTX_free(ctx);
-        return -1;
+    std::vector<std::string> payloads = {"Demo A","Demo B","Demo C"};
+    std::vector<sign_block_t> created;
+    // remove existing chain file
+    std::remove(chainfile.c_str());
+    for (size_t i = 0; i < payloads.size(); ++i) {
+        sign_block_t sb{};
+        sb.block_data.number = (int)i;
+        sb.block_data.time = (int)time(nullptr);
+        if (i == 0) memset(sb.block_data.previous_hash, 0, HASH_LEN);
+        else {
+            std::string prev_hex = bc::compute_block_hash_hex(created.back().block_data, created.back().sign);
+            memcpy(sb.block_data.previous_hash, prev_hex.c_str(), HASH_LEN);
+        }
+        sb.block_data.data_len = (int)payloads[i].size();
+        sb.block_data.data = (char*)malloc(sb.block_data.data_len);
+        memcpy(sb.block_data.data, payloads[i].data(), sb.block_data.data_len);
+
+        std::vector<unsigned char> ser;
+        bc::serialize_blockdata_be(sb.block_data, ser);
+        std::vector<unsigned char> sig;
+        if (!crypto::sign_data(privk, ser, sig)) { std::cerr << "sign failed\n"; return -1; }
+        sb.sign.sign_len = sig.size();
+        sb.sign.sign = (char*)malloc(sb.sign.sign_len);
+        memcpy(sb.sign.sign, sig.data(), sb.sign.sign_len);
+
+        if (!bc::append_block_file(sb, chainfile)) { std::cerr << "append failed\n"; return -1; }
+        created.push_back(sb);
     }
 
-    // Set RSA key generation parameters using OSSL_PARAM
-    unsigned int key_size = 2048;  // Key size
-    unsigned int pub_exp = 65537;  // Public exponent (RSA_F4)
-    OSSL_PARAM params[3];
-    params[0] = OSSL_PARAM_construct_uint("bits", &key_size); // Key size
-    params[1] = OSSL_PARAM_construct_uint("e", &pub_exp);   // Public exponent (RSA_F4)
-    params[2] = OSSL_PARAM_construct_end();
+    EVP_PKEY_free(privk);
 
-    if (EVP_PKEY_CTX_set_params(ctx, params) <= 0) {
-        EVP_PKEY_CTX_free(ctx);
-        return -1;
-    }
+    // load and verify
+    std::vector<sign_block_t> loaded;
+    if (!bc::load_chain_file(chainfile, loaded)) { std::cerr << "load_chain_file failed\n"; return -1; }
+    EVP_PKEY *pubk = crypto::load_public_key(pub);
+    if (!pubk) { std::cerr << "load public failed\n"; return -1; }
+    bool ok = bc::verify_chain(loaded, pubk);
+    std::cout << (ok ? "Chain OK" : "Chain FAILED") << "\n";
 
-    // Generate the key
-    if (EVP_PKEY_keygen(ctx, &keypair) <= 0) {
-        EVP_PKEY_CTX_free(ctx);
-        return -1;
-    }
-
-    // Clean up
-    EVP_PKEY_CTX_free(ctx);
-
-    // сохранение ключей в PEM формате
-    // Сохранение приватного ключа в файл
-    FILE *priv_file = fopen("private_key.pem", "wb");
-    if (!priv_file)
-    {
-        fprintf(stderr, "Ошибка открытия файла для приватного ключа\n");
-        EVP_PKEY_free(keypair);
-        EVP_PKEY_CTX_free(ctx);
-        return -1;
-    }
-
-    // Записываем приватный ключ в формате PEM
-    if (PEM_write_PrivateKey(priv_file, keypair, nullptr, nullptr, 0, nullptr, nullptr) != 1)
-    {
-        fprintf(stderr, "Ошибка записи приватного ключа: %s\n", ERR_error_string(ERR_get_error(), nullptr));
-        fclose(priv_file);
-        EVP_PKEY_free(keypair);
-        EVP_PKEY_CTX_free(ctx);
-        return -1;
-    }
-    fclose(priv_file);
-
-    // Сохранение публичного ключа в файл
-    FILE *pub_file = fopen("public_key.pem", "wb");
-    if (!pub_file)
-    {
-        fprintf(stderr, "Ошибка открытия файла для публичного ключа\n");
-        EVP_PKEY_free(keypair);
-        EVP_PKEY_CTX_free(ctx);
-        return -1;
-    }
-
-    // Записываем публичный ключ в формате PEM
-    if (PEM_write_PUBKEY(pub_file, keypair) != 1)
-    {
-        fprintf(stderr, "Ошибка записи публичного ключа: %s\n", ERR_error_string(ERR_get_error(), nullptr));
-        fclose(pub_file);
-        EVP_PKEY_free(keypair);
-        EVP_PKEY_CTX_free(ctx);
-        return -1;
-    }
-    fclose(pub_file);
-
-    // Освобождаем ресурсы
-    // EVP_PKEY_free(keypair);
-
-    sign_block_t sign_block_0;
-
-    const char *data_0 = "Evgeniy and Anatoliy";
-
-    sign_block_0.block_data.number = 0;
-    memset(sign_block_0.block_data.previous_hash, 0, HASH_LEN);
-    memcpy(sign_block_0.block_data.data, data_0, sizeof(data_0));
-    sign_block_0.block_data.data_len = sizeof(*data_0);
-
-    // 3. Подпись
-    EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
-    if (!mdctx) handleErrors();
-
-    if (1 != EVP_DigestSignInit(mdctx, nullptr, EVP_sha256(), nullptr, keypair))
-        handleErrors();
-
-    if (1 != EVP_DigestSignUpdate(mdctx, &sign_block_0.block_data, sizeof(sign_block_0.block_data)))
-        handleErrors();
-
-    
-    EVP_DigestSignFinal(mdctx, nullptr, &sign_block_0.sign.sign_len);  // Получить размер подписи
-
-    size_t sig_len = 0;
-    EVP_DigestSignFinal(mdctx, nullptr, &sig_len);  // Получить размер подписи
-
-    std::vector<unsigned char> signature(sig_len);
-    if (1 != EVP_DigestSignFinal(mdctx, signature.data(), &sig_len))
-        handleErrors();
-
-    signature.resize(sig_len);
-    EVP_MD_CTX_free(mdctx);
-
-    std::cout << "✔ Подпись создана (" << sig_len << " байт)\n";
-
-    // 4. Проверка подписи
-    EVP_MD_CTX* verify_ctx = EVP_MD_CTX_new();
-    if (!verify_ctx) handleErrors();
-
-    if (1 != EVP_DigestVerifyInit(verify_ctx, nullptr, EVP_sha256(), nullptr, keypair))
-        handleErrors();
-
-    if (1 != EVP_DigestVerifyUpdate(verify_ctx, &sign_block_0.block_data, sizeof(sign_block_0.block_data)))
-        handleErrors();
-
-    int result = EVP_DigestVerifyFinal(verify_ctx, signature.data(), sign_block_0.sign.sign_len);
-
-    if (result == 1)
-        std::cout << "✅ Подпись подтверждена\n";
-    else if (result == 0)
-        std::cout << "❌ Подпись недействительна\n";
-    else
-        handleErrors();
-
-    EVP_MD_CTX_free(verify_ctx);
-    EVP_PKEY_free(keypair);
-    EVP_cleanup();
-    ERR_free_strings();
-
-    return 0;
+    bc::free_chain(loaded);
+    for (auto &s: created) { if (s.block_data.data) free(s.block_data.data); if (s.sign.sign) free(s.sign.sign); }
+    EVP_PKEY_free(pubk);
+    return ok ? 0 : -1;
 }
 
 void drawOutlinedText(float x, float y, float z, const char* text) {
@@ -453,9 +239,8 @@ void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
 
 int main() {
 
-    test_openssl();
-
-    test_sign_unsign_block();
+    ensure_keys();
+    demo_blockchain();
     
 	std::cout << "main();\n";
     if (!glfwInit()) {

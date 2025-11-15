@@ -1,3 +1,8 @@
+// Simple include guard
+#pragma once
+
+#include <cstddef>
+
 #define HASH_LEN 64
 #define SIGN_LEN 64
 
